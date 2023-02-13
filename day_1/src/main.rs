@@ -24,7 +24,7 @@ impl Elf {
 
 fn main() {
     // create a Path variable to the location of the file
-    let path = Path::new("/home/andr-be/rust_programs/advent_of_code_2022/day_1/input");
+    let path = Path::new("src/input");
     // read the file as input
     let data = read_input(path);
     // convert the string into an iterator of strings separated by \n (???)
