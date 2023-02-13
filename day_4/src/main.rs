@@ -3,6 +3,18 @@
 ///
 ///
 
+use std::path::Path;
+
+fn read_input(path: &Path) -> String {
+    match std::fs::read_to_string(path) {
+        Ok(input) => input,
+        Err(_) => String::from(""),
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
+    let problem = Path::new("src/input.txt");
+    let input = read_input(problem);
+
+    
 }
