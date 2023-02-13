@@ -15,6 +15,18 @@ fn read_input(path: &Path) -> String {
 fn main() {
     let problem = Path::new("src/input.txt");
     let input = read_input(problem);
+    let lines = input.lines();
 
-    
+    for pair in lines {
+        let split = pair.split(",");
+        println!("Pair: {pair}");
+        for s in split {
+            println!("Split: {:?}", s);
+            let values = s.split('-');
+            for value in values {
+                let value = value.parse::<usize>().unwrap();
+                println!("Value: {:?}", value);
+            } 
+        }
+    }
 }
