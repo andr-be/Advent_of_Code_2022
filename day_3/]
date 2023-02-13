@@ -1,0 +1,104 @@
+/// Advent of Code 2022: Day 3, Parts 1 & 2 Solution
+/// andr-be 2023
+///
+/// This challenge is about splitting arbitrary strings, finding which letters
+///     appear twice, mapping these values to numbers and then totalling them.
+
+use std::path::Path;
+
+struct Rucksack {
+    uid: usize, 
+    items: String,
+    bag_size: usize,
+    compartment_1: String,
+    compartment_2: String,
+    shared_item: char,
+    priority: usize,
+}
+
+impl Rucksack {
+    fn split_bag(&mut self) {
+        let split_index = self.bag_size / 2;
+        self.compartment_1 = self.items[..split_index].to_string();
+        self.compartment_2 = self.items[split_index..].to_string();
+    }
+
+    fn find_shared_item(&mut self) {
+        let c1: Vec<char> = self.compartment_1.chars().collect();
+        let c2: Vec<char> = self.compartment_2.chars().collect();
+        for character in c1 {
+            if c2.contains(&character) {
+                self.shared_item = character;
+            } 
+        }
+    }
+
+    fn calculate_priority(&mut self) {
+        let letter_score = String::from("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        let letter_score = letter_score
+                    .chars()
+                    .enumerate();
+        for (score, letter) in letter_score {
+            if self.shared_item == letter {
+                self.priority = score
+            }
+        }
+        println!("Shared item in bag {} is: {}\nPriority score: {}\n", self.uid, self.shared_item, self.priority);
+    }
+
+    fn new(uid: usize, items: String) -> Rucksack {
+        let mut new_bag = Rucksack {
+            uid,
+            items,
+            bag_size: items.len(),
+            compartment_1: "".to_string(),
+            compartment_2: "".to_string(),
+            shared_item: ' ',
+            priority: 0,
+            
+        }
+    }
+}
+
+fn read_input(path: &Path) -> String {
+    match std::fs::read_to_string(path) {
+        Ok(input) => input,
+        Err(_) => String::from(""),
+    }
+}
+
+fn main() {
+    let path = Path::new("src/input.txt");
+
+    let input = read_input(path);
+
+    let lines = input.lines();
+
+    let mut rucksacks: Vec<Rucksack> = Vec::new();
+
+    for (bag_id, line) in lines.enumerate() {
+        let mut new_bag = Rucksack {
+            uid: bag_id + 1,
+            items: String::from(line),
+            bag_size: line.len(),
+            compartment_1: "".to_string(),
+            compartment_2: "".to_string(),
+            shared_item: ' ',
+            priority: 0,
+        };
+
+        new_bag.split_bag();
+        new_bag.find_shared_item();
+        new_bag.calculate_priority();
+        rucksacks.push(new_bag);
+    }
+
+    let mut answer_pt1: usize = 0;
+
+    for rucksack in rucksacks {
+        answer_pt1 += rucksack.priority;
+    }
+
+    println!("The answer for Part 1 is: {}", answer_pt1);
+
+}
