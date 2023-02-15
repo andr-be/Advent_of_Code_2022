@@ -1,4 +1,3 @@
-# Advent_of_Code_2022
 Rust solutions to Advent of Code 2022. 
 
 PAC: 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
