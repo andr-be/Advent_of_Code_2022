@@ -1,4 +1,1 @@
-Rust solutions to Advent of Code 2022. 
-
-PAC1: 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
-PAC2: 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
+Rust solutions to Advent of Code 2022
