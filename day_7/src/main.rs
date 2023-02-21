@@ -22,6 +22,13 @@
 
 use std::path::Path;
 
+// STRUCTS
+#[derive(PartialEq, Clone)]
+struct Directory {
+    name: String,
+    size: usize,
+    depth: usize,
+}
 #[derive(Debug, Default)]
 struct ArenaTree<T> 
 where
@@ -29,7 +36,6 @@ where
 {
     arena: Vec<Node<T>>,
 }
-
 #[derive(Debug)]
 struct Node<T>
 where 
@@ -41,6 +47,7 @@ where
     children: Vec<usize>,
 }
 
+// METHODS 
 impl<T> Node<T>
 where
     T: PartialEq
@@ -81,13 +88,44 @@ where
     }
 }
 
-#[derive(PartialEq)]
-struct Directory {
-    name: String,
-    size: usize,
-    depth: usize,
+fn main() {
+    // read the file input and split it into an iterator over lines 
+    let input = read_input(Path::new("src/input.txt"));
+    let lines = input.lines();
+
+    // instantiate the file system tree structure
+    let mut filesystem: ArenaTree<Directory> = ArenaTree{ arena: vec![] };
+    
+    // declare the root and set it as the current directory
+    let root = Directory { name: "/".to_string(), size: 0, depth: 0 };
+    let mut current_dir = ArenaTree::node(&mut filesystem, root);
+
+    // list the problem parameters
+    let drive_size = 70_000_000;
+    let required_space = 30_000_000;
+    let drive_max = 100_000;
+
+    // iterate through every line of input and map the drive
+    for line in lines {
+        match &line[0..4] {
+            "$ ls" => { },    // do nothing
+            "$ cd" => current_dir = change_directory(&mut filesystem, current_dir, &line[5..]),
+            "dir " => create_directory(&mut filesystem, current_dir, &line[4..]),
+              _    => add_file(&mut filesystem, current_dir, line),         
+        };
+    }
+
+    // solve the problems 
+    let answer_part_1 = part_1(&mut filesystem, drive_max);
+    let answer_part_2 = &part_2(&mut filesystem, drive_size, required_space)[0];
+    println!("ANSWER PART 1:\t{}\nANSWER PART 2:\tDELETE DIR {} - {}", 
+        answer_part_1,
+        answer_part_2.name, 
+        answer_part_2.size
+    )
 }
 
+/// take a path and return a .txt as a String
 fn read_input(path: &Path) -> String {
     match std::fs::read_to_string(path) {
         Ok(input) => input,
@@ -95,108 +133,71 @@ fn read_input(path: &Path) -> String {
     }
 }
 
-fn main() {
-    let path = Path::new("src/input.txt");
-
-    let input = read_input(path);
-
-    let lines = input.lines();
-    let mut lines_processed = 0;
-
-    // instantiate the file system tree structure
-    let mut filesystem: ArenaTree<Directory> = ArenaTree{ arena: Vec::new() };
-    
-    // declare the root and set the current dir to it as you create it
-    let root = Directory { name: "/".to_string(), size: 0, depth: 0 };
-    let mut current_dir = ArenaTree::node(&mut filesystem, root);
-
-    let drive_size = 70_000_000;
-    let required_space = 30_000_000;
-
-    for line in lines {
-        match &line[0..4] {
-            "$ cd" => {     // change current directory
-                let drive_name = &line[5..];
-                match drive_name {
-                    ".." => {
-                        current_dir = filesystem.arena[current_dir].parent.unwrap();
-                    }
-                    _ => { 
-                        for dir in &filesystem.arena[current_dir].children {
-                            if filesystem.arena[*dir].val.name == drive_name {
-                                current_dir = filesystem.arena[*dir].idx;
-                            }
-                        }
-                    }
+/// change the current directory to one of its children
+fn change_directory(f: &mut ArenaTree<Directory>, c: usize, l: &str) -> usize {
+    match l {
+        ".." => f.arena[c].parent.unwrap(),
+        _ => {
+            for dir in &f.arena[c].children {
+                if f.arena[*dir].val.name == l {
+                    return f.arena[*dir].idx
                 }
-            },
-
-            "$ ls" => {     /* do nothing */    },
-
-            "dir " => {     // create a new directory node, child of current node
-                let new_dir = Directory { name: line[4..].to_string(), size: 0, depth: 0 };
-                let new_dir_idx = ArenaTree::node(&mut filesystem, new_dir);
-                
-                filesystem.arena[new_dir_idx].parent = Some(current_dir);
-                
-                filesystem.arena[current_dir].children.push(new_dir_idx);
-                
-                filesystem.arena[new_dir_idx].val.depth = filesystem
-                    .depth_to_target(
-                        0, &filesystem.arena[new_dir_idx].val
-                    ).unwrap();
-            }, 
-            _ => {      // add line.split_at().1 to current.size
-                let file_size = line
-                    .split_once(" ")
-                    .unwrap()
-                    .0
-                    .parse::<usize>()
-                    .unwrap();
-                filesystem.arena[current_dir].val.size += file_size;
-            },         
-        };
-        lines_processed += 1;
-    }
-    println!("{}\nLINES PROCESSED: {}", path.to_str().unwrap(), lines_processed);
-    
-    let mut answer_part_1 = 0;
-
-
-    for dir in (0..filesystem.arena.len()).rev() {
-        if filesystem.arena[dir].children.len() > 0 {
-            let children = filesystem.arena[dir].children.clone();
-            for id in children {
-                filesystem.arena[dir].val.size += filesystem.arena[id].val.size;
             }
-        }
-        if filesystem.arena[dir].val.size < 100_000 {
-            answer_part_1 += filesystem.arena[dir].val.size;
+            0
         }
     }
-    println!("ANSWER PART 1:\t{}\n", answer_part_1);
-
-    // PART 2
-    let mut answer_part_2 = Vec::new();
-    let size_of_root = filesystem.arena[0].val.size;
-    let remaining_space = drive_size - size_of_root;
-    let to_be_deleted = required_space - remaining_space;
-
-    println!("SIZE OF {} directory: {:7}\nREMAINING SPACE: {:7}\nTO BE DELETED: {:7}", 
-        filesystem.arena[0].val.name, 
-        size_of_root,
-        remaining_space,
-        to_be_deleted,
-    );
-
-    for i in 0..filesystem.arena.len() {
-        if filesystem.arena[i].val.size > to_be_deleted {
-            answer_part_2.push(&filesystem.arena[i].val);
-        }
-    }
-    answer_part_2.sort_unstable_by_key(|a| a.size);
-    println!("\nANSWER PART 2:\tDELETE DIR {} - {}", 
-        answer_part_2[0].name, 
-        answer_part_2[0].size)
 }
 
+/// create a new directory node, child of current node
+fn create_directory(f: &mut ArenaTree<Directory>, c: usize, l: &str) {
+    // TODO: turn this entire function into instantiation methods on structs
+    let new_dir = Directory { name: l.to_string(), size: 0, depth: 0 };
+    let new_dir_idx = ArenaTree::node(f, new_dir);
+    f.arena[new_dir_idx].parent = Some(c);
+    f.arena[c].children.push(new_dir_idx);
+    f.arena[new_dir_idx].val.depth = f.depth_to_target(0, &f.arena[new_dir_idx].val).unwrap();
+}
+
+/// add the size of a file to the current directory's size 
+fn add_file(f: &mut ArenaTree<Directory>, c: usize, l: &str) {
+    let file_size = l
+        .split_once(" ")
+        .unwrap()
+        .0
+        .parse::<usize>()
+        .unwrap();
+    f.arena[c].val.size += file_size;
+}
+
+/// solve the first part of the problem
+fn part_1(f: &mut ArenaTree<Directory>, max: usize) -> usize {
+    let mut sum: usize = 0;
+    for dir in (0..f.arena.len()).rev() {
+        if f.arena[dir].children.len() > 0 {
+            let children = f.arena[dir].children.clone();
+            for id in children {
+                f.arena[dir].val.size += f.arena[id].val.size;
+            }
+        }
+        if f.arena[dir].val.size < max {
+            sum += f.arena[dir].val.size;
+        }
+    }
+    sum
+}
+
+/// solve the second part of the problem
+fn part_2(f: &mut ArenaTree<Directory>, drive: usize, required: usize) -> Vec<Directory> {
+    let mut vec: Vec<Directory> = vec![];
+    let size_of_root = f.arena[0].val.size;
+    let remaining_space = drive - size_of_root;
+    let delete = required - remaining_space;
+    for i in 0..f.arena.len() {
+        if f.arena[i].val.size > delete {
+            let clone = f.arena[i].val.clone();
+            vec.push(clone);
+        }
+    }
+    vec.sort_unstable_by_key(|a| a.size);
+    vec
+}
