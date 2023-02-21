@@ -14,6 +14,7 @@ fn main() {
     let problem = Path::new("src/input.txt");
     let input = read_input(problem);
     let lines = input.lines();
+
     let mut p1_solution = 0;        
     let mut p2_solution = 0;
 
@@ -37,7 +38,7 @@ fn main() {
         let p2_max = p2.next().unwrap().parse::<usize>().unwrap() + 1;
 
         // Huw's Inequality-Based Solution
-        if (p1_min >= p2_min && p1_max <= p2_max) 
+        if ( p1_min >= p2_min && p1_max <= p2_max) 
         || ( p2_min >= p1_min && p2_max <= p1_max) {
             p1_solution += 1;
         }
