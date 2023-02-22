@@ -79,12 +79,13 @@ fn main() {
     for line in lines {
         let letters = line.char_indices();
         for letter in letters {
-            let height: usize = letter.1.to_digit(10).unwrap() as usize;
-            let x_pos: usize = letter.0;
-            let y_pos: usize = current_line;
-            
-            let new_tree = Tree::new(height, x_pos, y_pos);
-            forest.add_tree(new_tree);
+            forest.add_tree(
+                Tree::new(
+                    letter.1.to_digit(10).unwrap() as usize, 
+                    letter.0, 
+                    current_line
+                )
+            );
 
         }
         current_line += 1;

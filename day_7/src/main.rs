@@ -101,9 +101,9 @@ fn main() {
     let mut current_dir = ArenaTree::node(&mut filesystem, root);
 
     // list the problem parameters
+    let drive_max = 100_000;
     let drive_size = 70_000_000;
     let required_space = 30_000_000;
-    let drive_max = 100_000;
 
     // iterate through every line of input and map the drive
     for line in lines {
