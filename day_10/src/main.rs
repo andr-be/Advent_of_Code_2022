@@ -55,7 +55,6 @@ fn main() {
                 println!("C: {cycle:3} -->> NO OP\t\tX_REG: {}", x_reg.x);
                 answer_part_1 += part_1_sum(&cycle, &x_reg.x);
                 answer_part_2 += &part_2_render(&cycle, &x_reg.x);
-                cycle += 1;
             }
             Action::Addx => {
                 let addi: i32 = line[5..].parse().unwrap();
@@ -65,14 +64,13 @@ fn main() {
                 cycle += 1;
                 
                 answer_part_1 += part_1_sum(&cycle, &x_reg.x);
-                println!("C: {cycle:3} -->> ADDX {:3} (2/2)\tX_REG: {}", addi, x_reg.x);
                 x_reg.add(addi);
                 answer_part_2 += &part_2_render(&cycle, &x_reg.x);
-                cycle += 1;
+                println!("C: {cycle:3} -->> ADDX {:3} (2/2)\tX_REG: {}", addi, x_reg.x);
             }
         }
+        cycle += 1;
     }
-
     println!("ANSWER PART 1: {}", answer_part_1);
     println!("ANSWER PART 2:\n{}", answer_part_2);
 }
@@ -87,22 +85,14 @@ fn part_1_sum(cycle: &i32, x: &i32) -> i32 {
 
 fn part_2_render(cycle: &i32, x: &i32) -> String {
     let mut ret = String::new();
-    let mapped_cycle: i32 = match cycle.clone() {
-        c if c <= 1 * SCREEN_WIDTH => c,
-        c if c <= 2 * SCREEN_WIDTH => c - (1 * SCREEN_WIDTH),
-        c if c <= 3 * SCREEN_WIDTH => c - (2 * SCREEN_WIDTH),
-        c if c <= 4 * SCREEN_WIDTH => c - (3 * SCREEN_WIDTH),
-        c if c <= 5 * SCREEN_WIDTH => c - (4 * SCREEN_WIDTH),
-        c if c <= 6 * SCREEN_WIDTH => c - (5 * SCREEN_WIDTH),
-        _ => panic!()
-    };
+    let mapped_cycle: i32 = cycle.clone() % SCREEN_WIDTH;
     let x_rng = (x-1)..=(x+1);
     if x_rng.contains(&mapped_cycle) {
         ret += "# "
     } else {
         ret += ". "
     };
-    if mapped_cycle == 40 {
+    if mapped_cycle == 39 {
         ret += "\n"
     };
     ret
