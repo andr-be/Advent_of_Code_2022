@@ -97,3 +97,4 @@ fn part_2_render(cycle: &i32, x: &i32) -> String {
     };
     ret
 }
+
